@@ -1,8 +1,12 @@
+from collections import namedtuple
 from functools import cache
 from riot_na import create_riot_aa, Scheme, Organism, RiotNumberingAA
 from Bio.PDB.Polypeptide import aa1
 
-NumberingOutput = list[tuple[tuple[int, str], str]]
+Position = namedtuple("Position", ["number", "insertion"])
+NumberedResidue = namedtuple("NumberedResidue", ["position", "amino_acid"])
+NumberingOutput = list[NumberedResidue]
+
 
 SET_AMINO_ACIDS = set(aa1)
 ASCII_SHIFT = 64
@@ -16,10 +20,6 @@ SCHEME_SHORT_TO_LONG = {
     "chothia": "chothia",
     "martin": "martin",
     "i": "imgt",
-    "a": "aho",
-    "aho": "aho",
-    "wolfguy": "wolfguy",
-    "w": "wolfguy",
 }
 
 
@@ -34,8 +34,8 @@ def map_position_to_tuple(pos: str) -> tuple[int, str]:
     if "." in pos:
         position, insertion = pos.split(".")
         insertion_letter = chr(int(insertion) + ASCII_SHIFT)
-        return int(position), insertion_letter
-    return int(pos), " "
+        return Position(number=int(position), insertion=insertion_letter)
+    return Position(number=int(pos), insertion=" ")
 
 
 def validate_sequence(sequence: str):
@@ -52,11 +52,14 @@ def validate_sequence(sequence: str):
 
 def get_raw_output(output: NumberingOutput) -> NumberingOutput:
     raw_output = [output[0]]
-    for element in output[1:]:
-        raw_output[-1][0][0]
-        if raw_output[-1][0][0] >= element[0][0]:
-            element = ((raw_output[-1][0][0] + 1, " "), element[1])
-        raw_output.append(element)
+    for residue in output[1:]:
+        prev_residue = raw_output[-1]
+        if prev_residue.position.number >= residue.position.number:
+            new_residue = NumberedResidue(
+                Position(number=prev_residue.position.number + 1, insertion=" "),
+                amino_acid=residue.amino_acid,
+            )
+        raw_output.append(new_residue)
     return raw_output
 
 
@@ -91,10 +94,10 @@ def number_single_sequence(
     ), f"Sequence provided as an {chain} chain is not recognised as an {chain} chain."
 
     output = [
-        (map_position_to_tuple(pos), res)
+        NumberedResidue(position=map_position_to_tuple(pos), amino_acid=res)
         for pos, res in airr.scheme_residue_mapping.items()
     ]
-    numbers = [x[0][0] for x in output]
+    numbers = [residue.position.number for residue in output]
 
     # Check for missing residues assuming imgt numbering
     assert (max(numbers) > 120) and (

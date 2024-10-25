@@ -55,11 +55,11 @@ def get_raw_output(output: NumberingOutput) -> NumberingOutput:
     for residue in output[1:]:
         prev_residue = raw_output[-1]
         if prev_residue.position.number >= residue.position.number:
-            new_residue = NumberedResidue(
+            residue = NumberedResidue(
                 Position(number=prev_residue.position.number + 1, insertion=" "),
                 amino_acid=residue.amino_acid,
             )
-        raw_output.append(new_residue)
+        raw_output.append(residue)
     return raw_output
 
 

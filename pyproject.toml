@@ -1,6 +1,6 @@
 [project]
 dependencies = [
-    "numpy >= 1.24",
+    "numpy >= 1.23",
     "packaging ~= 24.1",
     "pdbfixer @ git+https://github.com/openmm/pdbfixer.git",
     "hmmer ~= 3.4",

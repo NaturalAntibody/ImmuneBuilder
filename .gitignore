@@ -162,3 +162,4 @@ cython_debug/
 #.idea/
 
 ImmuneBuilder/trained_model/*
+.vscode

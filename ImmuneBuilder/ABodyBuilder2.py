@@ -1,3 +1,4 @@
+from typing import Literal
 import torch
 import numpy as np
 import os
@@ -14,7 +15,8 @@ from ImmuneBuilder.util import (
     are_weights_ready,
 )
 from ImmuneBuilder.refine import refine
-from ImmuneBuilder.sequence_checks import number_sequences
+from ImmuneBuilder.sequence_checks import ChainType, heavy_light_airr_to_numbering_output, number_sequences
+from riot_na import AirrRearrangementEntryAA
 
 embed_dim = {
     "antibody_model_1": 128,
@@ -33,7 +35,6 @@ model_urls = {
 header = (
     "REMARK  ANTIBODY STRUCTURE MODELLED USING ABODYBUILDER2                         \n"
 )
-
 
 class Antibody:
     def __init__(self, numbered_sequences, predictions):
@@ -160,8 +161,12 @@ class ABodyBuilder2:
 
             self.models[model_file] = model
 
-    def predict(self, sequence_dict):
-        numbered_sequences = number_sequences(sequence_dict, scheme=self.scheme)
+    def predict(self, sequence_dict: dict[ChainType, str], airr_dict: None | dict[ChainType, AirrRearrangementEntryAA]=None):
+        if airr_dict:
+            numbered_sequences = heavy_light_airr_to_numbering_output(sequence_dict, airr_dict)
+        else:
+            numbered_sequences = number_sequences(sequence_dict, scheme=self.scheme)
+
         sequence_dict = {
             chain: "".join([x[1] for x in numbered_sequences[chain]])
             for chain in numbered_sequences
@@ -184,9 +189,9 @@ class ABodyBuilder2:
 
 
 def command_line_interface():
-    description = """
-        ABodyBuilder2                                      \\\    //
-        A Method for Antibody Structure Prediction          \\\  //
+    description = r"""
+        ABodyBuilder2                                      \\    //
+        A Method for Antibody Structure Prediction          \\  //
         Author: Brennan Abanades Kenyon                       ||
         Supervisor: Charlotte Deane                           || 
     """
@@ -295,11 +300,11 @@ def command_line_interface():
 
 
 if __name__ == "__main__":
-    abb2 = ABodyBuilder2(numbering_scheme="raw")
+    abb2 = ABodyBuilder2(numbering_scheme="imgt")
     antibody = abb2.predict(
         sequence_dict={
-            "H": "LVQSGVEVKKPGASVKVSCKASGYTFTNYYMYWVRQAPGQGLEWMGGINPSNGGTNFNEKFKNRVTLTTDSSTTTAYMELKSLQFDDTAVYYCARRDYRFDMGFDYWGQGTTVTVSSASTKGPSVFPLAPSSKSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKKVEPKSCDKTHHHHHH",
-            "L": "EIVLTQSPATLSLSPGERATLSCRASKGVSTSGYSYLHWYQQKPGQAPRLLIYLASYLESGVPARFSGSGSGTDFTLTISSLEPEDFAVYYCQHSRDLPLTFGGGTKVEIKRTVAAPSVFIFPPSDEQLKSGTASVVCLLNNFYPREAKVQWKVDNALQSGNSQESVTEQDSKDSTYSLSSTLTLSKADYEKHKVYACEVTHQGLSSPVTKSFNRGEC",
+            "H": "EVQLVESGGGLVQPGGSLRLSCAASGFSLTIYGAHWVRQAPGKGLEWVSVIWAGGSTNYNSALMSRFTISKDNSKNTVYLQMNSLRAEDTAVYYCARDGSSPYYYSMEYWGQGTTVTVSSASTKGPSVFPLAPSSKSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRVEPKSC",
+            "L": "EIVLTQSPATLSLSPGERATLSCSATSSVSYMHWFQQKPGQAPRLLIYSTSNLASGIPARFSGSGSGTDFTLTISSLEPEDFAVYYCQQRSSYPFTFGPGTKLDIKRTVAAPSVFIFPPSDEQLKSGTASVVCLLNNFYPREAKVQWKVDNALQSGNSQESVTEQDSKDSTYSLSSTLTLSKADYEKHKVYACEVTHQGLSSPVTKSFNRGEC",
         }
     )
-    antibody.save("antibody.pdb")
+    antibody.save("7quh_abb.pdb")

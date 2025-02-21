@@ -15,8 +15,12 @@ from ImmuneBuilder.util import (
     are_weights_ready,
 )
 from ImmuneBuilder.refine import refine
-from ImmuneBuilder.sequence_checks import ChainType, heavy_light_airr_to_numbering_output, number_sequences
-from riot_na import AirrRearrangementEntryAA
+from ImmuneBuilder.sequence_checks import (
+    ChainType,
+    heavy_light_airr_to_numbering_output,
+    number_sequences,
+)
+from riot_na import AirrRearrangementEntryAA, create_riot_aa
 
 embed_dim = {
     "antibody_model_1": 128,
@@ -35,6 +39,7 @@ model_urls = {
 header = (
     "REMARK  ANTIBODY STRUCTURE MODELLED USING ABODYBUILDER2                         \n"
 )
+
 
 class Antibody:
     def __init__(self, numbered_sequences, predictions):
@@ -161,9 +166,15 @@ class ABodyBuilder2:
 
             self.models[model_file] = model
 
-    def predict(self, sequence_dict: dict[ChainType, str], airr_dict: None | dict[ChainType, AirrRearrangementEntryAA]=None):
+    def predict(
+        self,
+        sequence_dict: dict[ChainType, str],
+        airr_dict: None | dict[ChainType, AirrRearrangementEntryAA] = None,
+    ):
         if airr_dict:
-            numbered_sequences = heavy_light_airr_to_numbering_output(sequence_dict, airr_dict)
+            numbered_sequences = heavy_light_airr_to_numbering_output(
+                sequence_dict, airr_dict, use_raw_scheme=self.scheme=="raw"
+            )
         else:
             numbered_sequences = number_sequences(sequence_dict, scheme=self.scheme)
 
@@ -301,10 +312,14 @@ def command_line_interface():
 
 if __name__ == "__main__":
     abb2 = ABodyBuilder2(numbering_scheme="imgt")
-    antibody = abb2.predict(
-        sequence_dict={
-            "H": "EVQLVESGGGLVQPGGSLRLSCAASGFSLTIYGAHWVRQAPGKGLEWVSVIWAGGSTNYNSALMSRFTISKDNSKNTVYLQMNSLRAEDTAVYYCARDGSSPYYYSMEYWGQGTTVTVSSASTKGPSVFPLAPSSKSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRVEPKSC",
-            "L": "EIVLTQSPATLSLSPGERATLSCSATSSVSYMHWFQQKPGQAPRLLIYSTSNLASGIPARFSGSGSGTDFTLTISSLEPEDFAVYYCQQRSSYPFTFGPGTKLDIKRTVAAPSVFIFPPSDEQLKSGTASVVCLLNNFYPREAKVQWKVDNALQSGNSQESVTEQDSKDSTYSLSSTLTLSKADYEKHKVYACEVTHQGLSSPVTKSFNRGEC",
-        }
-    )
-    antibody.save("7quh_abb.pdb")
+    sequence_dict: dict[ChainType, str] = {
+        "H": "EVQLVESGGGLVQPGGSLRLSCAASGFSLTIYGAHWVRQAPGKGLEWVSVIWAGGSTNYNSALMSRFTISKDNSKNTVYLQMNSLRAEDTAVYYCARDGSSPYYYSMEYWGQGTTVTVSSASTKGPSVFPLAPSSKSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRVEPKSC",
+        "L": "EIVLTQSPATLSLSPGERATLSCSATSSVSYMHWFQQKPGQAPRLLIYSTSNLASGIPARFSGSGSGTDFTLTISSLEPEDFAVYYCQQRSSYPFTFGPGTKLDIKRTVAAPSVFIFPPSDEQLKSGTASVVCLLNNFYPREAKVQWKVDNALQSGNSQESVTEQDSKDSTYSLSSTLTLSKADYEKHKVYACEVTHQGLSSPVTKSFNRGEC",
+    }
+    riot_aa = create_riot_aa()
+    airr_dict: dict[ChainType, AirrRearrangementEntryAA] = {
+        chain_type: riot_aa.run_on_sequence(header="", query_sequence=seq)
+        for chain_type, seq in sequence_dict.items()
+    }
+    antibody = abb2.predict(sequence_dict, airr_dict=airr_dict)
+    antibody.save("7quh_abb_airr.pdb")

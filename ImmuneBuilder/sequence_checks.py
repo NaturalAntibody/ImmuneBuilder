@@ -151,13 +151,24 @@ def number_sequences(
 
 
 def heavy_light_airr_to_numbering_output(
-    seqs: dict[ChainType, str], dict: dict[ChainType, AirrRearrangementEntryAA]
+    seqs: dict[ChainType, str],
+    airr_dict: dict[ChainType, AirrRearrangementEntryAA],
+    use_raw_scheme: bool = False,
 ) -> dict[ChainType, NumberingOutput]:
     # support only imgt numbering for now
-    for airr in dict.values():
-        assert airr.numbering_scheme == "imgt", "Only IMGT scheme numbering is supported when passing airr objects"
+    for airr in airr_dict.values():
+        assert (
+            airr.numbering_scheme == "imgt"
+        ), "Only IMGT scheme numbering is supported when passing airr objects"
     validate_sequence(seqs["H"])
     validate_sequence(seqs["L"])
-    validate_numbering(sequence=seqs["H"], chain="H", airr=dict["H"])
-    validate_numbering(sequence=seqs["L"], chain="L", airr=dict["L"])
-    return {chain: airr_to_numbering_output(airr) for chain, airr in dict.items()}
+    validate_numbering(sequence=seqs["H"], chain="H", airr=airr_dict["H"])
+    validate_numbering(sequence=seqs["L"], chain="L", airr=airr_dict["L"])
+    numbering_outputs: dict[ChainType, NumberingOutput] = {
+        chain: airr_to_numbering_output(airr) for chain, airr in airr_dict.items()
+    }
+    if use_raw_scheme:
+        return {
+            chain: get_raw_output(output) for chain, output in numbering_outputs.items()
+        }
+    return numbering_outputs

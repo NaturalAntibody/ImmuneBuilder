@@ -82,6 +82,17 @@ def get_raw_output(output: NumberingOutput) -> NumberingOutput:
     return raw_output
 
 
+def get_continuous_output(output: NumberingOutput) -> NumberingOutput:
+    continuous_output = []
+    for i, residue in enumerate(output, start=1):
+        residue = NumberedResidue(
+                Position(number=i, insertion=" "),
+                amino_acid=residue.amino_acid,
+            )
+        continuous_output.append(residue)
+    return continuous_output
+
+
 def validate_numbering(
     sequence: str, chain: ChainType, airr: AirrRearrangementEntryAA
 ) -> None:
@@ -114,7 +125,7 @@ def number_single_sequence(
     validate_sequence(sequence)
 
     try:
-        if scheme != "raw":
+        if scheme not in ["raw", "continuous"]:
             scheme = SCHEME_SHORT_TO_LONG[scheme.lower()]
     except KeyError:
         raise NotImplementedError(f"Unimplemented numbering scheme: {scheme}")
@@ -132,6 +143,8 @@ def number_single_sequence(
             return output
         case "raw":
             return get_raw_output(output)
+        case "continuous":
+            return get_continuous_output(output)
         case _:
             airr = riot_aa.run_on_sequence(
                 header="", query_sequence=sequence, scheme=Scheme(scheme)
@@ -153,7 +166,7 @@ def number_sequences(
 def heavy_light_airr_to_numbering_output(
     seqs: dict[ChainType, str],
     airr_dict: dict[ChainType, AirrRearrangementEntryAA],
-    use_raw_scheme: bool = False,
+    scheme: str = "imgt",
 ) -> dict[ChainType, NumberingOutput]:
     # support only imgt numbering for now
     for airr in airr_dict.values():
@@ -167,8 +180,17 @@ def heavy_light_airr_to_numbering_output(
     numbering_outputs: dict[ChainType, NumberingOutput] = {
         chain: airr_to_numbering_output(airr) for chain, airr in airr_dict.items()
     }
-    if use_raw_scheme:
-        return {
+    match scheme:
+        case "raw":
+            return {
             chain: get_raw_output(output) for chain, output in numbering_outputs.items()
-        }
-    return numbering_outputs
+            }
+        case "continuous":
+            return {
+            chain: get_continuous_output(output) for chain, output in numbering_outputs.items()
+            }
+        case "imgt":
+            return numbering_outputs
+        case _:
+            print(f"Requested numbering scheme '{scheme}' but passed AIRR objects contain {airr_dict['H'].numbering_scheme} numbering scheme, which will be used instead.")
+            return numbering_outputs

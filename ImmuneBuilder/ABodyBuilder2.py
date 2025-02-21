@@ -173,7 +173,7 @@ class ABodyBuilder2:
     ):
         if airr_dict:
             numbered_sequences = heavy_light_airr_to_numbering_output(
-                sequence_dict, airr_dict, use_raw_scheme=self.scheme=="raw"
+                sequence_dict, airr_dict, scheme=self.scheme
             )
         else:
             numbered_sequences = number_sequences(sequence_dict, scheme=self.scheme)

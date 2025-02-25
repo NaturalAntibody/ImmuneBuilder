@@ -94,6 +94,7 @@ class Antibody:
         )
 
     def save(self, filename=None, check_for_strained_bonds=True, n_threads=-1):
+        filename = str(filename)
         if filename is None:
             filename = "ABodyBuilder2_output.pdb"
 

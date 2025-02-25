@@ -30,6 +30,8 @@ forcefield = app.ForceField("amber14/protein.ff14SB.xml")
 
 
 def refine(input_file, output_file, check_for_strained_bonds=True, tries=3, n=6, n_threads=-1):
+    input_file = str(input_file)
+    output_file = str(output_file)
     for i in range(tries):
         if refine_once(input_file, output_file, check_for_strained_bonds=check_for_strained_bonds, n=n, n_threads=n_threads):
             return True

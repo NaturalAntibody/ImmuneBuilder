@@ -16,7 +16,6 @@ from ImmuneBuilder.util import (
 )
 from ImmuneBuilder.refine import refine
 from ImmuneBuilder.sequence_checks import (
-    ChainType,
     heavy_light_airr_to_numbering_output,
     number_sequences,
 )
@@ -169,8 +168,8 @@ class ABodyBuilder2:
 
     def predict(
         self,
-        sequence_dict: dict[ChainType, str],
-        airr_dict: None | dict[ChainType, AirrRearrangementEntryAA] = None,
+        sequence_dict: dict[str, str],
+        airr_dict: None | dict[str, AirrRearrangementEntryAA] = None,
     ):
         if airr_dict:
             numbered_sequences = heavy_light_airr_to_numbering_output(
@@ -313,12 +312,12 @@ def command_line_interface():
 
 if __name__ == "__main__":
     abb2 = ABodyBuilder2(numbering_scheme="imgt")
-    sequence_dict: dict[ChainType, str] = {
+    sequence_dict: dict[str, str] = {
         "H": "EVQLVESGGGLVQPGGSLRLSCAASGFSLTIYGAHWVRQAPGKGLEWVSVIWAGGSTNYNSALMSRFTISKDNSKNTVYLQMNSLRAEDTAVYYCARDGSSPYYYSMEYWGQGTTVTVSSASTKGPSVFPLAPSSKSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRVEPKSC",
         "L": "EIVLTQSPATLSLSPGERATLSCSATSSVSYMHWFQQKPGQAPRLLIYSTSNLASGIPARFSGSGSGTDFTLTISSLEPEDFAVYYCQQRSSYPFTFGPGTKLDIKRTVAAPSVFIFPPSDEQLKSGTASVVCLLNNFYPREAKVQWKVDNALQSGNSQESVTEQDSKDSTYSLSSTLTLSKADYEKHKVYACEVTHQGLSSPVTKSFNRGEC",
     }
     riot_aa = create_riot_aa()
-    airr_dict: dict[ChainType, AirrRearrangementEntryAA] = {
+    airr_dict: dict[str, AirrRearrangementEntryAA] = {
         chain_type: riot_aa.run_on_sequence(header="", query_sequence=seq)
         for chain_type, seq in sequence_dict.items()
     }

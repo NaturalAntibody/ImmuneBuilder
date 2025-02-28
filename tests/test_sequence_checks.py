@@ -2,7 +2,6 @@ from dis import disco
 import pytest
 from riot_na import AirrRearrangementEntryAA, create_riot_aa
 from ImmuneBuilder.sequence_checks import (
-    ChainType,
     heavy_light_airr_to_numbering_output,
     number_sequences,
     number_single_sequence,
@@ -80,10 +79,10 @@ def test_number_single_sequence_exceptions():
 
 
 def test_airr_to_numbering_output():
-    sequence_dict: dict[ChainType, str] = {
+    sequence_dict: dict[str, str] = {
         "H": "EVQLVESGGGLVQPGGSLRLSCAASGFSLTIYGAHWVRQAPGKGLEWVSVIWAGGSTNYNSALMSRFTISKDNSKNTVYLQMNSLRAEDTAVYYCARDGSSPYYYSMEYWGQGTTVTVSSASTKGPSVFPLAPSSKSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRVEPKSC",
         "L": "EIVLTQSPATLSLSPGERATLSCSATSSVSYMHWFQQKPGQAPRLLIYSTSNLASGIPARFSGSGSGTDFTLTISSLEPEDFAVYYCQQRSSYPFTFGPGTKLDIKRTVAAPSVFIFPPSDEQLKSGTASVVCLLNNFYPREAKVQWKVDNALQSGNSQESVTEQDSKDSTYSLSSTLTLSKADYEKHKVYACEVTHQGLSSPVTKSFNRGEC",
     }
     riot_aa = create_riot_aa()
-    airr_dict: dict[ChainType, AirrRearrangementEntryAA] = {chain_type: riot_aa.run_on_sequence(header="", query_sequence=seq) for chain_type, seq in sequence_dict.items()}
+    airr_dict: dict[str, AirrRearrangementEntryAA] = {chain_type: riot_aa.run_on_sequence(header="", query_sequence=seq) for chain_type, seq in sequence_dict.items()}
     assert number_sequences(sequence_dict) == heavy_light_airr_to_numbering_output(sequence_dict, airr_dict)

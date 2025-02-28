@@ -14,8 +14,6 @@ from riot_na.api.utils import int_to_str_insertion
 Position = namedtuple("Position", ["number", "insertion"])
 NumberedResidue = namedtuple("NumberedResidue", ["position", "amino_acid"])
 NumberingOutput = list[NumberedResidue]
-ChainType = Literal["H", "L"]
-
 
 SET_AMINO_ACIDS = set(aa1)
 
@@ -94,7 +92,7 @@ def get_continuous_output(output: NumberingOutput) -> NumberingOutput:
 
 
 def validate_numbering(
-    sequence: str, chain: ChainType, airr: AirrRearrangementEntryAA
+    sequence: str, chain: str, airr: AirrRearrangementEntryAA
 ) -> None:
 
     allow = [chain]
@@ -118,7 +116,7 @@ def validate_numbering(
 
 def number_single_sequence(
     sequence: str,
-    chain: ChainType,
+    chain: str,
     scheme: str = "imgt",
     allowed_species: list[str] = ["human", "mouse"],
 ):
@@ -153,8 +151,8 @@ def number_single_sequence(
 
 
 def number_sequences(
-    seqs: dict[ChainType, str], scheme="imgt", allowed_species=["human", "mouse"]
-) -> dict[ChainType, NumberingOutput]:
+    seqs: dict[str, str], scheme="imgt", allowed_species=["human", "mouse"]
+) -> dict[str, NumberingOutput]:
     return {
         chain: number_single_sequence(
             seqs[chain], chain, scheme=scheme, allowed_species=allowed_species
@@ -164,10 +162,10 @@ def number_sequences(
 
 
 def heavy_light_airr_to_numbering_output(
-    seqs: dict[ChainType, str],
-    airr_dict: dict[ChainType, AirrRearrangementEntryAA],
+    seqs: dict[str, str],
+    airr_dict: dict[str, AirrRearrangementEntryAA],
     scheme: str = "imgt",
-) -> dict[ChainType, NumberingOutput]:
+) -> dict[str, NumberingOutput]:
     # support only imgt numbering for now
     for airr in airr_dict.values():
         assert (
@@ -177,7 +175,7 @@ def heavy_light_airr_to_numbering_output(
     validate_sequence(seqs["L"])
     validate_numbering(sequence=seqs["H"], chain="H", airr=airr_dict["H"])
     validate_numbering(sequence=seqs["L"], chain="L", airr=airr_dict["L"])
-    numbering_outputs: dict[ChainType, NumberingOutput] = {
+    numbering_outputs: dict[str, NumberingOutput] = {
         chain: airr_to_numbering_output(airr) for chain, airr in airr_dict.items()
     }
     match scheme:

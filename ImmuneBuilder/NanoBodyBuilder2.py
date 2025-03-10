@@ -114,7 +114,7 @@ class NanoBodyBuilder2:
 
 
     def predict(self, sequence_dict):
-        numbered_sequences = number_sequences(sequence_dict, allowed_species=None, scheme = self.scheme)
+        numbered_sequences = number_sequences(sequence_dict, scheme=self.scheme)
         sequence_dict = {chain: "".join([x[1] for x in numbered_sequences[chain]]) for chain in numbered_sequences}
 
         with torch.no_grad():

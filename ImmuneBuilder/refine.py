@@ -1,13 +1,10 @@
 from pathlib import Path
 import pdbfixer
-import os
 import numpy as np
 from openmm import app, LangevinIntegrator, CustomExternalForce, CustomTorsionForce, OpenMMException, Platform, unit
 from scipy import spatial
-import logging
 import tempfile
 
-logging.disable()
 
 ENERGY = unit.kilocalories_per_mole
 LENGTH = unit.angstroms

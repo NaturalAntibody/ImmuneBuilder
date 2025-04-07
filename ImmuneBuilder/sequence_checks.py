@@ -1,6 +1,5 @@
 from collections import namedtuple
 from functools import cache
-from typing import Literal
 from riot_na import (
     AirrRearrangementEntryAA,
     create_riot_aa,
@@ -48,19 +47,18 @@ def validate_sequence(sequence: str):
     """
     Check whether a sequence is a protein sequence or if someone has submitted something nasty.
     """
-    assert (
-        len(sequence) > 70
-    ), f"Sequence too short to be an Ig domain. Please give whole sequence:\n{sequence}"
-    assert len(sequence) < 10000, "Sequence too long."
-    assert not (
-        set(sequence.upper()) - SET_AMINO_ACIDS
-    ), "Unknown amino acid letter found in sequence: %s" % ", ".join(
-        list((set(sequence.upper()) - SET_AMINO_ACIDS))
-    )
+    if len(sequence) <= 70:
+        raise ValueError(f"Sequence too short to be an Ig domain. Please give whole sequence:\n{sequence}")
+    if len(sequence) >= 10000:
+        raise ValueError("Sequence too long.")
+    unknown_acids = set(sequence.upper()) - SET_AMINO_ACIDS
+    if unknown_acids:
+        raise ValueError(f"Unknown amino acid letter found in sequence: {', '.join(list(unknown_acids))}")
 
 
 def airr_to_numbering_output(airr: AirrRearrangementEntryAA) -> NumberingOutput:
-    assert airr.scheme_residue_mapping
+    if not airr.scheme_residue_mapping:
+        raise ValueError("No scheme residue mapping available.")
     return [
         NumberedResidue(position=map_position_to_tuple(pos), amino_acid=res)
         for pos, res in airr.scheme_residue_mapping.items()
@@ -98,20 +96,19 @@ def validate_numbering(
     allow = [chain]
     if chain == "L":
         allow.append("K")
-    assert (
-        airr.locus and airr.locus[-1].upper() in allow
-    ), f"Sequence provided as an {chain} chain is not recognised as an {chain} chain."
+    if not airr.locus or airr.locus[-1].upper() not in allow:
+        raise ValueError(f"Sequence provided as an {chain} chain is not recognised as an {chain} chain.")
 
-    assert airr.scheme_residue_mapping, f"Could not number sequence: {sequence}"
+    if not airr.scheme_residue_mapping:
+        raise ValueError(f"Could not number sequence: {sequence}")
 
     imgt_positions = list(airr.scheme_residue_mapping.keys())
     first_imgt_position = int(float(imgt_positions[0]))
     last_imgt_position = int(float(imgt_positions[-1]))
 
     # Check for missing residues assuming imgt numbering
-    assert (
-        first_imgt_position < 8 and last_imgt_position > 120
-    ), f"Sequence missing too many residues to model correctly. Please give whole sequence:\n{sequence}"
+    if first_imgt_position >= 8 or last_imgt_position <= 120:
+        raise ValueError(f"Sequence missing too many residues to model correctly. Please give whole sequence:\n{sequence}")
 
 
 def number_single_sequence(
@@ -170,9 +167,9 @@ def heavy_light_airr_to_numbering_output(
 ) -> dict[str, NumberingOutput]:
     # support only imgt numbering for now
     for airr in airr_dict.values():
-        assert (
-            airr.numbering_scheme == "imgt"
-        ), "Only IMGT scheme numbering is supported when passing airr objects"
+        if airr.numbering_scheme != "imgt":
+            raise ValueError("Only IMGT scheme numbering is supported when passing airr objects")
+    
     validate_sequence(seqs["H"])
     validate_sequence(seqs["L"])
     validate_numbering(sequence=seqs["H"], chain="H", airr=airr_dict["H"])

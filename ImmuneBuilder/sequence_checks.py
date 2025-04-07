@@ -148,8 +148,10 @@ def number_single_sequence(
 
 
 def number_sequences(
-    seqs: dict[str, str], scheme="imgt", allowed_species=["human", "mouse"]
+    seqs: dict[str, str], scheme="imgt", allowed_species=None
 ) -> dict[str, NumberingOutput]:
+    if allowed_species is None:
+        allowed_species = ["human", "mouse"]
     return {
         chain: number_single_sequence(
             seqs[chain], chain, scheme=scheme, allowed_species=allowed_species
